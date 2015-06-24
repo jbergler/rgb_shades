@@ -1,66 +1,82 @@
-#include <SerialCommand.h>
-
-SerialCommand sCmd;
-
-void c_set_brightness() {
+String c_set_brightness(String arg) {
   int brightness;
-  char *arg;
+  String result;
 
-  arg = sCmd.next();
-  if (arg == NULL) {
-  	Serial.println("c_set_brightness requires an argument");
-  	return;
-  }
-
-  if (strcmp(arg, "RESET") == 0) {
-  	brightness = BRIGHTNESS;
+  if (arg == "RESET") {
+    brightness = BRIGHTNESS;
   } else {
-    brightness = atoi(arg);
+    brightness = arg.toInt();
   }
   
   if (brightness < 0 || brightness > 255) {
-    Serial.print("Brightness out of range: ");
-    Serial.println(brightness);
-    return;
-  }
-
-  Serial.print("Setting Brightness to: ");
-  Serial.println(brightness);
-  FastLED.setBrightness(brightness);
-}
-
-void c_set_scale() {
-  float scale;
-  char *arg;
-
-  arg = sCmd.next();
-  if (arg == NULL) {
-    Serial.println("c_set_scale requires an argument");
-    return;
-  }
-
-  if (strcmp(arg, "RESET") == 0) {
-    scale = 80.0;
+    result = "BRIGHT out of range: ";
+    result += brightness;
   } else {
-    scale = atof(arg);
+    FastLED.setBrightness(brightness);
+    result = "BRIGHT = ";
+    result += brightness;
+  }
+  return result;
+}
+
+String c_set_scale(String arg) {
+  int scale;
+  String result;
+
+  if (arg == "RESET") {
+    scale = 80;
+  } else {
+    scale = arg.toInt();
   }
 
-  Serial.print("Setting scale to: ");
-  Serial.println(scale);
-  e_spectrum_scale = scale;
+  e_spectrum_scale = (float) scale;
+  result = "SCALE = ";
+  result += scale;
+  return result;
 }
 
-void c_unrecognized(const char *command) {
-  Serial.print("Unrecognized Command: ");
-  Serial.println(command);
+String c_set_color(String arg) {
+  int color;
+  String result;
+
+  if (arg == "RESET") {
+    color = 0;
+  } else {
+    color = arg.toInt();
+  }
+
+  e_spectrum_color = color;
+  result = "COLOR = ";
+  result += color;
+  return result;
 }
 
-void setup_commands() {
-  sCmd.addCommand("BRIGHTNESS", c_set_brightness);
-  sCmd.addCommand("SCALE", c_set_scale);
-  sCmd.setDefaultHandler(c_unrecognized);
+String c_set_color_cycle(String arg) {
+  String result;
+  e_spectrum_color_cycle = !e_spectrum_color_cycle;
+  result = "CC Toggled";
+  return result;
 }
 
-void loop_commands() {
-  sCmd.readSerial();
+String process_command(String input) {
+  String result = "";
+  if (input.indexOf(' ') <= 0) {
+    result = "error: ";
+    result += input;
+    return result;
+  }
+
+  String command = input.substring(0,input.indexOf(' '));
+  String arg = input.substring(input.indexOf(' ')+1);
+
+  command.toUpperCase();
+  
+  // BR - brightness
+  if      (command == "BR" || command == "BRIGHT") result = c_set_brightness(arg);
+  else if (command == "SC" || command == "SCALE")  result = c_set_scale(arg);
+  else if (command == "CO" || command == "COLOR")  result = c_set_color(arg);
+  else if (command == "CC" || command == "CYCLE")  result = c_set_color_cycle(arg);
+  else    result = "unknown: " + command;
+
+  return result;
 }
