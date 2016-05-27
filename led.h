@@ -1,6 +1,7 @@
 // LED Setup
-#define FASTLED_ALLOW_INTERRUPTS 0
+#define FASTLED_ALLOW_INTERRUPTS 1
 #include <FastLED.h>
+
 #define LED_PIN     PIN_LED_OUTPUT
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812B
@@ -17,6 +18,7 @@ CRGB leds[NUM_LEDS+1];
 #include "xy.h"
 
 void setup_leds() {
+  for(int i = 0; i < NUM_LEDS; i++) { leds[i] = CRGB::Black; }
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, (NUM_LEDS+1));
   FastLED.setBrightness( BRIGHTNESS );
   FastLED.setDither( DITHER );
